@@ -1,4 +1,4 @@
-# VALORAValora: Agentic AI Economic Simulation (Backend + ML + CrewAI + Flask)
+#Valora: Agentic AI Economic Simulation (Backend + ML + CrewAI + Flask)
 
 Valora is a multi-agent artificial economy built entirely in Python.
 It combines machine learning, agentic AI (CrewAI), and a simulation engine to model how consumers, firms, banks, and regulators behave inside an economy under different shocks and policies.
