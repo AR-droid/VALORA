@@ -1,0 +1,6 @@
+name: financial_crisis
+description: A banking crisis in month 8 tightens credit and hits confidence for 10 months.
+seed: 14
+ticks: 36
+shocks:
+  - {tick: 8, type: financial_crisis, magnitude: 1.3, duration: 10}

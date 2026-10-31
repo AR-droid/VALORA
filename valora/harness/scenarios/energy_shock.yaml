@@ -1,0 +1,6 @@
+name: energy_shock
+description: An energy price spike raises costs and inflation from month 4 for 9 months.
+seed: 13
+ticks: 36
+shocks:
+  - {tick: 4, type: energy_price_spike, magnitude: 1.5, duration: 9}

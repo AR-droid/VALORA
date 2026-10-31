@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VALORA Policy Copilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#666; --border:#e5e5e5; --accent:#0066cc; --accent-soft:#e8f3ff; --surface:#fff; --good:#1a7f37; --bad:#c62828; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Inter","Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:20px 32px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; background:var(--surface); position:sticky; top:0; z-index:5; }
+    h1 { margin:0; font-size:20px; font-weight:600; cursor:pointer; }
+    .subtext { font-size:13px; color:var(--muted); }
+    nav { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    nav a, .btn { border:none; background:transparent; color:var(--muted); padding:8px 14px; border-radius:6px; font-size:13px; font-weight:500; text-decoration:none; cursor:pointer; font-family:inherit; }
+    nav a:hover { background:var(--bg); color:var(--fg); }
+    nav a.active, .btn-primary { background:var(--fg); color:#fff; }
+    .btn-primary:disabled { opacity:.5; cursor:wait; }
+    .btn-outline { border:1px solid var(--border); color:var(--fg); background:var(--surface); }
+    .pill { padding:6px 12px; border-radius:6px; font-size:12px; background:var(--bg); color:var(--muted); font-weight:500; }
+    main { max-width:1180px; margin:0 auto; padding:28px 24px 64px; display:grid; gap:20px; }
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
+    .panel h2 { margin:0 0 12px; font-size:15px; font-weight:600; }
+    textarea { width:100%; min-height:84px; border:1px solid var(--border); border-radius:8px; padding:12px; font:inherit; font-size:14px; resize:vertical; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+    .examples button { border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; color:var(--muted); font-family:inherit; }
+    .examples button:hover { color:var(--fg); border-color:#bbb; }
+    .grid2 { display:grid; grid-template-columns: 1.1fr 1fr; gap:20px; }
+    @media (max-width: 900px) { .grid2 { grid-template-columns:1fr; } header { padding:16px; } main { padding:16px; } }
+    .trace { display:flex; flex-direction:column; gap:10px; }
+    .step { border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:13px; }
+    .step .k { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:600; }
+    .step.tool { border-left:3px solid var(--accent); }
+    .step.thought { border-left:3px solid #999; }
+    .step.answer { border-left:3px solid var(--good); }
+    .step pre { white-space:pre-wrap; word-break:break-word; background:var(--bg); padding:8px; border-radius:6px; font-size:11.5px; max-height:180px; overflow:auto; margin:6px 0 0; }
+    .answer { font-size:14px; line-height:1.55; }
+    .levers { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+    .lever { background:var(--accent-soft); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:12px; font-weight:600; }
+    .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
+    .metric { border:1px solid var(--border); border-radius:8px; padding:10px; }
+    .metric .label { font-size:11px; color:var(--muted); }
+    .metric .value { font-size:18px; font-weight:600; }
+    .good { color:var(--good); } .bad { color:var(--bad); }
+    canvas { max-height:240px; }
+    .empty { color:var(--muted); font-size:13px; }
+    .history-item { font-size:13px; padding:8px 0; border-bottom:1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 onclick="location.href='/'">VALORA</h1>
+      <div class="subtext">policy copilot</div>
+    </div>
+    <nav>
+      <a href="/studio?tab=analysis">Council</a>
+      <a href="/studio?tab=simulation">Simulation</a>
+      <a href="/studio?tab=ledger">Ledger</a>
+      <a href="/copilot" class="active">Copilot</a>
+      <a href="/bench">Benchmark</a>
+      <span class="pill" id="model-pill">Model: {{ model }}</span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>What should the economy achieve?</h2>
+      <textarea id="goal" placeholder="e.g. Bring unemployment under 5% without pushing inflation above 4%"></textarea>
+      <div class="row examples" id="examples">
+        <button>Bring unemployment down without pushing inflation above 4%</button>
+        <button>Get inflation back to 2% with the least job losses</button>
+        <button>Reduce wealth inequality while keeping growth steady</button>
+        <button>Maximise long-run growth</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary" id="run">Run Copilot</button>
+        <label class="subtext">Horizon <select id="horizon"><option>12</option><option selected>24</option><option>36</option></select> months</label>
+        <span class="subtext" id="status"></span>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <section class="panel">
+        <h2>Recommendation</h2>
+        <div id="answer" class="answer empty">The copilot's proposal, checked by re-simulation, appears here.</div>
+        <div class="levers" id="levers"></div>
+        <div class="metrics" id="metrics"></div>
+        <div class="row" id="actions"></div>
+        <canvas id="chart"></canvas>
+      </section>
+      <section class="panel">
+        <h2>Agent trace</h2>
+        <div class="trace" id="trace"><div class="empty">Each tool call and reasoning step shows here.</div></div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Recent copilot runs</h2>
+      <div id="history" class="empty">No runs yet.</div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='vendor/chart-4.4.1.umd.js') }}"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const md = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '<br><br>');
+    let chart, lastRun;
+
+    document.querySelectorAll('#examples button').forEach(b => b.onclick = () => { $('goal').value = b.textContent; });
+
+    async function api(url, opts = {}) {
+      const r = await fetch(url, opts);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || `Request failed: ${r.status}`);
+      return data;
+    }
+
+    function fmt(v, d = 2) { return (v > 0 ? '+' : '') + Number(v).toFixed(d); }
+
+    function renderTrace(trace) {
+      $('trace').innerHTML = '';
+      (trace || []).forEach(s => {
+        const div = document.createElement('div');
+        div.className = `step ${s.type}`;
+        let body = '';
+        if (s.type === 'tool') {
+          body = `<div><strong>${esc(s.tool)}</strong></div><pre>${esc(JSON.stringify(s.args, null, 1))}</pre><pre>${esc(JSON.stringify(s.result, null, 1))}</pre>`;
+        } else {
+          body = `<div>${md(s.text)}</div>`;
+        }
+        div.innerHTML = `<div class="k">Step ${s.step} · ${esc(s.type)}</div>${body}`;
+        $('trace').appendChild(div);
+      });
+    }
+
+    function renderResult(r) {
+      lastRun = r;
+      $('answer').classList.remove('empty');
+      $('answer').innerHTML = md(r.answer || '');
+      const p = r.proposal || {};
+      $('levers').innerHTML = Object.entries(p.levers || {}).map(([k, v]) => `<span class="lever">${esc(k)} ${fmt(v, 3)}</span>`).join('')
+        + (p.duration ? `<span class="pill">${p.duration} months</span>` : '') + `<span class="pill">planner: ${esc(r.planner)}</span>`;
+      const d = r.delta || {};
+      const cells = [
+        ['Unemployment (pts)', d.mean_unemployment, true],
+        ['Inflation (pts)', d.mean_inflation, true],
+        ['GDP (avg)', d.mean_gdp, false],
+      ];
+      $('metrics').innerHTML = cells.map(([label, v, lowerBetter]) => {
+        const good = lowerBetter ? v < 0 : v > 0;
+        return `<div class="metric"><div class="label">${label} vs no policy</div><div class="value ${good ? 'good' : 'bad'}">${v === undefined ? '—' : fmt(v)}</div></div>`;
+      }).join('');
+      $('actions').innerHTML = '';
+      if (p.levers) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline';
+        btn.textContent = 'Send to the council for a vote';
+        btn.onclick = async () => {
+          btn.disabled = true; btn.textContent = 'Council deliberating...';
+          try {
+            const c = await api(`/api/copilot/${r.id}/submit`, { method: 'POST' });
+            btn.textContent = `Council: ${c.verdict.decision} · ${c.status}`;
+          } catch (e) { btn.textContent = e.message; }
+        };
+        $('actions').appendChild(btn);
+      }
+      drawChart(r.series);
+    }
+
+    function drawChart(series) {
+      if (!series || !window.Chart) return;
+      chart && chart.destroy();
+      chart = new Chart($('chart'), {
+        type: 'line',
+        data: {
+          labels: series.tick,
+          datasets: [
+            { label: 'Unemployment, policy', data: series.policy_unemployment, borderColor: '#0066cc', borderWidth: 2, pointRadius: 0 },
+            { label: 'Unemployment, no policy', data: series.baseline_unemployment, borderColor: '#0066cc', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0 },
+            { label: 'Inflation, policy', data: series.policy_inflation, borderColor: '#c62828', borderWidth: 2, pointRadius: 0 },
+            { label: 'Inflation, no policy', data: series.baseline_inflation, borderColor: '#c62828', borderDash: [4, 4], borderWidth: 1.5, pointRadius: 0 },
+          ]
+        },
+        options: { responsive: true, interaction: { mode: 'index', intersect: false },
+          scales: { x: { title: { display: true, text: 'month' } }, y: { title: { display: true, text: '%' } } },
+          plugins: { legend: { labels: { boxWidth: 12, font: { size: 11 } } } } }
+      });
+    }
+
+    async function loadHistory() {
+      try {
+        const data = await api('/api/copilot/runs?limit=8');
+        if (!data.runs.length) return;
+        $('history').classList.remove('empty');
+        $('history').innerHTML = data.runs.map(r => `<div class="history-item"><strong>${esc(r.goal)}</strong><br><span class="subtext">${new Date(r.created_at).toLocaleString()} · ${esc(r.result.proposal?.label || 'no proposal')} · ${esc(r.result.planner)}</span></div>`).join('');
+      } catch (e) { /* history is optional */ }
+    }
+
+    $('run').onclick = async () => {
+      const goal = $('goal').value.trim();
+      $('run').disabled = true;
+      $('status').textContent = 'Agent is working: inspecting, simulating, stress-testing...';
+      $('trace').innerHTML = '<div class="empty">Working...</div>';
+      try {
+        const r = await api('/api/copilot/run', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ goal, horizon: Number($('horizon').value) }) });
+        renderTrace(r.trace);
+        renderResult(r);
+        $('status').textContent = `Done with ${r.trace.length} steps (${r.model}).`;
+        loadHistory();
+      } catch (e) {
+        $('status').textContent = e.message;
+      } finally { $('run').disabled = false; }
+    };
+
+    loadHistory();
+  </script>
+</body>
+</html>
