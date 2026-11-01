@@ -94,4 +94,4 @@ You can also deploy from your machine: `pip install huggingface_hub && HF_TOKEN=
 
 ## Credits
 
-The web studio, sector model and avatar images come from the VALORA prototype at [Siddharth-777/VALORA-REPO](https://github.com/Siddharth-777/VALORA-REPO). Chart.js 4.4.1 is vendored under its MIT licence.
+Chart.js 4.4.1 is vendored under its MIT licence.
