@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valora Economic Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --fg: #1a1a1a;
+      --muted: #666666;
+      --border: #e5e5e5;
+      --accent: #0066cc;
+      --accent-soft: #e8f3ff;
+      --surface: #ffffff;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+    .subtext { font-size: 13px; color: var(--muted); font-weight: 400; }
+    .pill { 
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .nav-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: var(--bg); color: var(--fg); }
+    .tab-btn.active { background: var(--fg); color: var(--surface); }
+    .ledger-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .ledger-feed { display: flex; flex-direction: column; gap: 12px; }
+    .ledger-item { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: var(--surface); box-shadow: var(--shadow-sm); }
+    .ledger-item h3 { margin: 0 0 8px 0; font-size: 14px; font-weight: 600; }
+    .ledger-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; font-size: 12px; color: var(--muted); }
+    .hash-pill { display: inline-block; padding: 4px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 600; word-break: break-all; }
+    .audit-list { display: flex; flex-direction: column; gap: 8px; }
+    .audit-entry { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--surface); font-size: 13px; line-height: 1.5; box-shadow: var(--shadow-sm); }
+    .audit-entry strong { color: var(--fg); }
+    .status-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; }
+    main { flex: 1; display: flex; flex-direction: column; gap: 24px; padding: 32px; max-width: 1400px; margin: 0 auto; width: 100%; }
+    .page-section { display: none; flex-direction: column; gap: 24px; }
+    .page-section.active { display: flex; }
+    .panel { 
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+    }
+    .panel h2 { 
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    textarea { 
+      width: 100%;
+      min-height: 140px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 14px;
+      background: var(--surface);
+      color: var(--fg);
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.6;
+      transition: border-color 0.2s;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    button { 
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
+      background: var(--fg);
+      color: var(--surface);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    button.secondary { background: var(--surface); color: var(--fg); border: 1px solid var(--border); }
+    button.secondary:hover { background: var(--bg); }
+    .grid-main { display: flex; flex-direction: column; gap: 16px; }
+    .sim-stack { display: flex; flex-direction: column; gap: 16px; }
+    .top-actors-panel { border: 1px solid var(--border); border-radius: 12px; padding: 18px; background: var(--surface); box-shadow: var(--shadow-sm); }
+    .top-actors-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .actor-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .actor-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; }
+    .actor-card .name { font-weight: 600; font-size: 13px; letter-spacing: -0.1px; }
+    .actor-card .score { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .macro-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+    .metric { 
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--surface);
+    }
+    .metric .label { font-size: 11px; color: var(--muted); letter-spacing: 0.3px; text-transform: uppercase; font-weight: 500; }
+    .metric .value { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; margin-top: 4px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .footer { border-top: 1px solid var(--border); padding: 20px 0 0; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .final-box { border: 1px solid var(--border); padding: 16px; border-radius: 8px; background: var(--surface); min-height: 70px; flex: 1; }
+    .hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .hero-card { 
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+    .hero-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .hero-card h3 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
+    .hero-card button { align-self: flex-start; margin-top: 8px; }
+    .pill.accent { background: var(--accent-soft); border: none; color: var(--accent); font-weight: 500; }
+
+    /* Simulation visuals */
+    .signal-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .signal-pill { 
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .pentagon-area {
+      position: relative;
+      height: 430px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      padding: 6px;
+    }
+    .node {
+      position: absolute;
+      width: 130px;
+      height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      color: var(--fg);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .node:hover .actor-node-circle { transform: scale(1.05); box-shadow: var(--shadow-md); }
+    .node.primary .actor-node-circle { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+    .actor-node-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .node-labels { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
+    .label-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--surface);
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .actor-card-header { display: flex; align-items: center; gap: 10px; }
+    .actor-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-soft), #f5f9ff);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 13px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .actor-avatar .avatar-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .avatar-badge {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+    .actor-avatar.has-image {
+      border-color: transparent;
+      background: var(--surface);
+      color: var(--surface);
+    }
+    .actor-avatar.has-image .avatar-img { opacity: 1; }
+    .actor-avatar.has-image .avatar-badge { opacity: 0; }
+    .actor-card .actor-avatar { width: 48px; height: 48px; }
+    .node .actor-avatar { width: 68px; height: 68px; }
+    .actor-node-label { line-height: 1.3; font-size: 12px; }
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .charts-stack { display: flex; flex-direction: column; gap: 14px; }
+    .chart-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+    }
+    .chart-card h3 { margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: -0.1px; }
+    input[type="number"] { width: 70px; background: var(--surface); color: var(--fg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-family: inherit; }
+
+    /* Policy analysis console styling */
+    .analysis-console { 
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 32px 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .analysis-header { 
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .analysis-title { font-size: 18px; font-weight: 600; margin: 0; letter-spacing: -0.3px; }
+    .analysis-sub { font-size: 13px; color: var(--muted); font-weight: 400; }
+    .analysis-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
+    .wide-panel { grid-column: 1 / -1; }
+    .debate-thread { display: flex; flex-direction: column; gap: 10px; }
+    .debate-exchange { display: flex; gap: 10px; align-items: flex-start; max-width: 86%; }
+    .debate-exchange.supporter { align-self: flex-start; }
+    .debate-exchange.opposer { align-self: flex-end; flex-direction: row-reverse; }
+    .debate-avatar { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--surface); font-weight: 700; font-size: 13px; box-shadow: var(--shadow-sm); flex-shrink: 0; }
+    .debate-bubble { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--surface); box-shadow: var(--shadow-sm); font-size: 13px; line-height: 1.6; animation: slideUp 0.25s ease; max-width: 100%; }
+    .debate-exchange.opposer .debate-bubble { background: var(--bg); }
+    .analysis-panel { 
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 24px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .analysis-panel h2 { font-size: 15px; margin: 0; letter-spacing: -0.2px; display: flex; gap: 10px; align-items: baseline; font-weight: 600; }
+    .metrics.new { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .metrics.new .metric-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--muted); font-weight: 500; }
+    .metrics.new .metric-value { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; margin-top: 4px; }
+    .workflow-container { 
+      position: relative;
+      width: 100%;
+      height: 420px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    .workflow-container svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .workflow-node { 
+      position: absolute; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      z-index: 10;
+    }
+    .workflow-node:hover { transform: translateY(-2px); z-index: 20; }
+    .node-circle { 
+      width: 56px;
+      height: 56px;
+      border-radius: 50%; 
+      border: 2px solid var(--border); 
+      background: var(--surface); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 18px; 
+      font-weight: 600; 
+      box-shadow: var(--shadow-sm); 
+      transition: all 0.2s; 
+      overflow: hidden; 
+    } 
+    .node-circle.has-image {
+      background: transparent;
+      padding: 0;
+      background-size: cover;
+      background-position: center;
+    }
+    .node-image { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; } 
+    .node-circle.image-fallback {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .workflow-node.active .node-circle { background: var(--fg); color: var(--surface); border-color: var(--fg); } 
+    .workflow-node.active .node-circle.has-image { background: transparent; box-shadow: 0 0 0 3px var(--accent-soft); } 
+    .workflow-node.processing .node-circle { animation: pulse 1.5s ease-in-out infinite; } 
+    .workflow-node.policy .node-circle { background: var(--bg); font-size: 16px; }
+    .node-label { font-size: 11px; font-weight: 500; text-align: center; max-width: 100px; color: var(--muted); letter-spacing: 0.2px; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.85; } }
+    .final-section { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .final-grid { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+    .final-panel {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 160px;
+      width: 100%;
+    }
+    .final-panel h2 { margin: 0; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .final-output {
+      border: 1px solid var(--border);
+      padding: 16px;
+      background: var(--bg);
+      min-height: 120px;
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: normal;
+      border-radius: 8px;
+    }
+    .agent-grid { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+    .agent-card {
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 8px;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+    .agent-card h4 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.1px; display: flex; align-items: center; gap: 10px; }
+    .agent-badge { 
+      border: none;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      background: var(--bg);
+      color: var(--muted);
+      letter-spacing: 0.2px;
+      font-weight: 500;
+    }
+    .agent-empty { border: 1px dashed var(--border); padding: 16px; border-radius: 8px; background: var(--bg); color: var(--muted); text-align: center; font-size: 13px; }
+    .final-controls { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .analysis-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .analysis-controls .status { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; animation: fadeIn 0.2s; backdrop-filter: blur(4px); }
+    .modal.active { display: flex; }
+    .modal-content { 
+      background: var(--surface);
+      border: 1px solid var(--border);
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      animation: slideUp 0.3s;
+    }
+    .modal-header { 
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface);
+    }
+    .modal-title { font-size: 16px; font-weight: 600; letter-spacing: -0.2px; }
+    .modal-close { 
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-weight: 400;
+      transition: all 0.2s;
+      border-radius: 6px;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--fg); }
+    .modal-body { padding: 24px; overflow-y: auto; font-size: 14px; line-height: 1.6; }
+    .output-block h3 { margin: 0 0 12px 0; font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+    .output-block p { margin: 0 0 14px 0; line-height: 1.6; }
+    .output-block ul, .output-block ol { margin: 0 0 14px 20px; padding: 0; display: grid; gap: 8px; }
+    .output-block ul { list-style: disc; }
+    .output-block ol { list-style: decimal; }
+    .output-block strong { font-weight: 600; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    @media (max-width: 1100px) { .grid-main, .analysis-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) {
+      main { padding: 20px; }
+      .metrics.new { grid-template-columns: repeat(2, 1fr); }
+      .workflow-container { height: 360px; }
+      .final-grid { flex-direction: column; }
+      .ledger-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 style="cursor: pointer;" onclick="window.location.href='/'">VALORA</h1>
+      <div class="subtext">economic sandbox</div>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn" data-target="analysis">Policy Analysis</button>
+      <button class="tab-btn" data-target="simulation">Simulation</button>
+      <button class="tab-btn" data-target="ledger">Ledger</button>
+      <a class="tab-btn" href="/copilot" style="text-decoration:none;">Copilot</a>
+      <a class="tab-btn" href="/bench" style="text-decoration:none;">Benchmark</a>
+      <div class="pill" id="token-pill" title="Max tokens per agent: {{ max_tokens | int }}">Model: {{ model }}</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-section active" data-section="landing">
+      <div class="landing-redirect">
+        <script>
+          if (window.location.pathname === '/studio' && window.location.search.includes('tab=landing')) {
+            window.location.href = '/';
+          }
+        </script>
+      </div>
+    </section>
+
+    <section class="page-section" data-section="analysis">
+      <div class="analysis-console">
+        <div class="analysis-header">
+          <h2 class="analysis-title">Valora Analysis Console</h2>
+          <div class="analysis-sub">Policy analysis through five-agent orchestration</div>
+        </div>
+
+        <div class="analysis-grid">
+          <div class="analysis-panel">
+            <div>
+              <h2>Agent Workflow</h2>
+              <p class="analysis-sub">Click nodes to view agent output</p>
+            </div>
+            <div class="workflow-container" id="workflow">
+              <svg id="workflow-svg"></svg>
+            </div>
+          </div>
+
+          <div class="analysis-panel">
+            <div>
+              <h2>Policy Debate Thread</h2>
+              <p class="analysis-sub">Policy Supporter vs Policy Opposer (live exchanges)</p>
+            </div>
+            <div class="debate-thread" id="debate-thread"></div>
+          </div>
+
+          <div class="analysis-panel wide-panel">
+            <div>
+              <h2>Policy Input <span class="analysis-sub" id="cycle-pill">Cycle: —</span></h2>
+              <p class="analysis-sub">Enter policy description for analysis</p>
+            </div>
+            <textarea id="policy-text" placeholder="Example: Create a $15,000 refundable tax credit with an income phase-out starting at $180k, funded by a temporary 0.3% corporate surcharge."></textarea>
+            <div class="analysis-controls">
+              <button id="run-button">Run Analysis</button>
+              <button class="secondary" id="reset-button">Reset</button>
+              <span class="status" id="run-status">Ready</span>
+            </div>
+            <div>
+              <div class="analysis-controls" style="justify-content: space-between; padding-top: 4px;">
+                <span class="analysis-sub">Economic Indicators</span>
+              </div>
+              <div class="metrics new" id="macro-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="final-section">
+          <div class="final-controls">
+            <button id="report-button">Download Report</button>
+          </div>
+          <div class="final-grid">
+            <div class="final-panel">
+              <h2>Consolidated Output</h2>
+              <div class="final-output output-block" id="final-output">Analysis results will appear here after running the agents.</div>
+            </div>
+            <div class="final-panel">
+              <h2>Agent Responses</h2>
+              <div class="agent-grid" id="agent-grid">
+                <div class="agent-empty">Run the analysis to view structured responses from each agent.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title" id="modal-title">Agent Output</div>
+            <button class="modal-close" id="modal-close">×</button>
+          </div>
+          <div class="modal-body" id="modal-body">No output available</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section" data-section="simulation">
+      <div class="sim-stack">
+        <section class="top-actors-panel">
+          <div class="top-actors-header">
+            <h2>Top Affected Actors</h2>
+            <span class="subtext" id="status-text">Idle</span>
+          </div>
+          <div class="actor-stats" id="top-actor-cards"></div>
+          <div class="pentagon-area" id="pentagon"></div>
+          <div class="node-labels" id="actor-labels"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Policy & Run Controls</h2>
+          <textarea id="sim-policy-text" placeholder="Describe your policy. Example: Expand child benefits, lower policy rates by 50 bps, and raise renewable mandates for utilities."></textarea>
+          <div class="actions">
+            <button id="run-btn">Run Simulation</button>
+            <button class="secondary" id="fill-btn">Use sample policy</button>
+            <span class="subtext">Time steps: <input type="number" id="steps" value="8" min="3" max="16" /></span>
+          </div>
+          <div>
+            <div class="subtext">Policy signals detected</div>
+            <div class="signal-badges" id="signal-badges"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Charts & Dashboards <span class="pill accent" id="selection-pill">Awaiting policy input</span></h2>
+          <div class="chart-card">
+            <h3>Global Economic Indicators</h3>
+            <canvas id="global-chart"></canvas>
+          </div>
+          <div class="charts-stack" id="actor-charts"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="page-section" data-section="ledger">
+      <section class="panel">
+        <h2>Blockchain Ledger & Audit Trail</h2>
+        <div class="status-row" id="ledger-status">
+          <span class="status-pill">Ledger height: —</span>
+          <span class="status-pill">Pending tx: —</span>
+          <span class="status-pill">Tip hash: —</span>
+          <span class="status-pill">Integrity: —</span>
+        </div>
+      </section>
+      <div class="ledger-grid">
+        <section class="panel">
+          <h2>Recent Blocks</h2>
+          <div class="ledger-feed" id="ledger-blocks">
+            <div class="analysis-sub">No blocks mined yet.</div>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Audit Log</h2>
+          <div class="audit-list" id="audit-log">
+            <div class="analysis-sub">Waiting for audit events...</div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='vendor/chart-4.4.1.umd.js') }}"></script>
+  <script>
+    const agentOrder = ["Economic Analyst", "Tax Advisor", "Policy Supporter", "Policy Opposer", "Policy Critic"];
+    const landingMacro = document.getElementById('macro-grid-landing');
+    const actorImageBase = "{{ url_for('static', filename='images') }}";
+    const nodeImageBase = "{{ url_for('static', filename='arr') }}";
+
+    const agentData = {
+      'Policy': { x: 40, y: 180, output: '', index: 'P', isPolicy: true },
+      'Economic Analyst': { x: 140, y: 180, output: '', index: 1, image: '1.jpg' },
+      'Tax Advisor': { x: 260, y: 180, output: '', index: 2, image: '2.jpg' },
+      'Policy Supporter': { x: 380, y: 120, output: '', index: 3, image: '3.jpg' },
+      'Policy Opposer': { x: 380, y: 240, output: '', index: 4, image: '4.jpg' },
+      'Policy Critic': { x: 500, y: 180, output: '', index: 5, image: '5.jpg' }
+    };
+
+    const connections = [
+      { from: 'Policy', to: 'Economic Analyst' },
+      { from: 'Economic Analyst', to: 'Tax Advisor' },
+      { from: 'Tax Advisor', to: 'Policy Supporter' },
+      { from: 'Tax Advisor', to: 'Policy Opposer' },
+      { from: 'Policy Supporter', to: 'Policy Critic' },
+      { from: 'Policy Opposer', to: 'Policy Critic' }
+    ];
+
+    const workflow = document.getElementById('workflow');
+    const svg = document.getElementById('workflow-svg');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const statusEl = document.getElementById('run-status');
+    const finalBox = document.getElementById('final-output');
+    const policyTextarea = document.getElementById('policy-text');
+    const agentGrid = document.getElementById('agent-grid');
+
+    const policyInput = document.getElementById('sim-policy-text');
+    const signalBadges = document.getElementById('signal-badges');
+    const pentagon = document.getElementById('pentagon');
+    const actorLabels = document.getElementById('actor-labels');
+    const topActorCards = document.getElementById('top-actor-cards');
+    const selectionPill = document.getElementById('selection-pill');
+    const statusText = document.getElementById('status-text');
+    const stepsInput = document.getElementById('steps');
+    const actorChartsWrap = document.getElementById('actor-charts');
+    const ledgerBlocks = document.getElementById('ledger-blocks');
+    const auditLog = document.getElementById('audit-log');
+    const ledgerStatus = document.getElementById('ledger-status');
+    const debateThread = document.getElementById('debate-thread');
+    const supporterColor = '#0066cc';
+    const opposerColor = '#d62828';
+    const debateDelay = 650;
+
+    let globalChart;
+    let actorCharts = {};
+    let ledgerInterval;
+    let debateTimers = [];
+    const samplePolicy = "Increase transfer payments, ease small-business credit, and tighten emissions standards for utilities.";
+    const defaultImpact = [
+      { name: 'Small Firms', score: 0.59 },
+      { name: 'Banks (Commercial)', score: 0.57 },
+      { name: 'Government (Fiscal Authority)', score: 0.19 },
+      { name: 'Regulatory Authority (Non-Monetary)', score: 0.82 },
+      { name: 'Exporters / Trade Sector', score: 0.51 }
+    ];
+
+    const actorImageMap = {
+      'Small Firms': { file: '1.jpg', index: 1 },
+      'Banks (Commercial)': { file: '2.jpg', index: 2 },
+      'Government (Fiscal Authority)': { file: '3.jpg', index: 3 },
+      'Regulatory Authority (Non-Monetary)': { file: '4.jpg', index: 4 },
+      'Exporters / Trade Sector': { file: '5.jpg', index: 5 },
+    };
+
+    function createActorAvatar(name) {
+      const info = actorImageMap[name];
+      if (!info) return null;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'actor-avatar';
+
+      const badge = document.createElement('span');
+      badge.className = 'avatar-badge';
+      badge.textContent = info.index ?? '';
+      avatar.appendChild(badge);
+
+      if (info.file) {
+        const img = document.createElement('img');
+        img.className = 'avatar-img';
+        img.src = `${actorImageBase}/${info.file}`;
+        img.alt = `${name} photo`;
+        img.loading = 'lazy';
+        img.addEventListener('load', () => {
+          avatar.classList.add('has-image');
+        });
+        img.addEventListener('error', () => {
+          avatar.classList.remove('has-image');
+        });
+        avatar.appendChild(img);
+      }
+
+      return avatar;
+    }
+
+    const escapeHTML = (str) => str.replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+
+    const sampleDebate = [
+      { speaker: 'Policy Supporter', stance: 'Supporter', message: 'The package boosts household demand through transfers while easing credit keeps payrolls intact for small firms.' },
+      { speaker: 'Policy Opposer', stance: 'Opposer', message: 'Transfers risk stoking inflation, and easy credit could misprice risk when banks are already cautious.' },
+      { speaker: 'Policy Supporter', stance: 'Supporter', message: 'Pairing it with tighter utility emissions nudges investment toward cleaner generation without waiting for cap-and-trade.' },
+      { speaker: 'Policy Opposer', stance: 'Opposer', message: 'Utilities may pass those compliance costs to ratepayers, undermining the relief from transfer payments.' },
+      { speaker: 'Policy Supporter', stance: 'Supporter', message: 'Targeted rebates for low-income customers and green grants soften that pass-through while sustaining grid upgrades.' },
+      { speaker: 'Policy Opposer', stance: 'Opposer', message: 'We still need clarity on financing—who absorbs the credit risk expansion and how it impacts fiscal space long term?' }
+    ];
+
+    function formatInline(text) {
+      return escapeHTML(text)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__(.+?)__/g, '<strong>$1</strong>');
+    }
+
+    function normalizeText(raw) {
+      return (raw || '')
+        .replace(/\\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/\t/g, '  ')
+        .replace(/^["'""'']+/, '')
+        .replace(/["'""'']+$/, '')
+        .trim();
+    }
+
+    function renderList(lines) {
+      const isOrdered = /^\d+\.\s+/.test(lines[0]);
+      const tag = isOrdered ? 'ol' : 'ul';
+      const items = lines.map(line => {
+        const text = line.replace(/^([-*•+]\s+|\d+\.\s+)/, '');
+        return `<li>${formatInline(text)}</li>`;
+      }).join('');
+      return `<${tag}>${items}</${tag}>`;
+    }
+
+    function renderBlock(block) {
+      const lines = block.split(/\n/).map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return '';
+
+      const headingMatch = lines[0].match(/^(#{1,3})\s+(.*)/);
+      if (headingMatch) {
+        const level = headingMatch[1].length + 2;
+        const tag = `h${Math.min(level, 6)}`;
+        const rest = lines.slice(1).join('\n');
+        const body = rest ? renderBlock(rest) : '';
+        return `<${tag}>${formatInline(headingMatch[2])}</${tag}>${body}`;
+      }
+
+      const isList = lines.length > 1 && lines.every(line => /^([-*•+]\s+|\d+\.\s+)/.test(line));
+      if (isList) return renderList(lines);
+
+      return `<p>${formatInline(lines.join(' '))}</p>`;
+    }
+
+    function formatOutput(raw) {
+      const cleaned = normalizeText(raw);
+      if (!cleaned) return '<p class="subtext">No output available</p>';
+      const blocks = cleaned.split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
+      const html = blocks.map(renderBlock).join('');
+      return `<div class="output-block">${html}</div>`;
+    }
+
+    finalBox.innerHTML = formatOutput(finalBox.textContent);
+
+    function renderAgentCards() {
+      agentGrid.innerHTML = '';
+      let hasContent = false;
+      agentOrder.forEach((agentName, idx) => {
+        const output = agentData[agentName]?.output?.trim();
+        if (!output) return;
+        hasContent = true;
+        const card = document.createElement('div');
+        card.className = 'agent-card';
+        card.innerHTML = `
+          <h4><span class="agent-badge">Agent ${idx + 1}</span>${agentName}</h4>
+          ${formatOutput(output)}
+        `;
+        agentGrid.appendChild(card);
+      });
+
+      if (!hasContent) {
+        const empty = document.createElement('div');
+        empty.className = 'agent-empty';
+        empty.textContent = 'Run the analysis to view structured responses from each agent.';
+        agentGrid.appendChild(empty);
+      }
+    }
+
+    function setActiveSection(target) {
+      const sections = document.querySelectorAll('.page-section');
+      const buttons = document.querySelectorAll('.tab-btn');
+      sections.forEach(sec => { sec.classList.toggle('active', sec.dataset.section === target); });
+      buttons.forEach(btn => { const isMatch = btn.dataset.target === target; btn.classList.toggle('active', isMatch); });
+      const params = new URLSearchParams(window.location.search);
+      params.set('tab', target);
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+      if (target === 'ledger') {
+        startLedgerStream();
+      } else {
+        stopLedgerStream();
+      }
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      if (btn.dataset.target) { btn.addEventListener('click', () => setActiveSection(btn.dataset.target)); }
+    });
+
+    function startFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab) setActiveSection(tab);
+    }
+
+    async function fetchJSON(url, options = {}) {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      return res.headers.get('content-type')?.includes('application/json') ? res.json() : res.text();
+    }
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.forEach(conn => {
+        const from = agentData[conn.from];
+        const to = agentData[conn.to];
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', from.x + 28);
+        line.setAttribute('y1', from.y + 28);
+        line.setAttribute('x2', to.x + 28);
+        line.setAttribute('y2', to.y + 28);
+        line.setAttribute('stroke', '#e5e5e5');
+        line.setAttribute('stroke-width', '2');
+        svg.appendChild(line);
+      });
+    }
+
+    function createNodes() {
+      Object.entries(agentData).forEach(([name, data]) => {
+        const node = document.createElement('div');
+        node.className = 'workflow-node';
+        if (data.isPolicy) node.classList.add('policy');
+        node.style.left = data.x + 'px';
+        node.style.top = data.y + 'px';
+        const circle = document.createElement('div');
+        circle.className = 'node-circle image-fallback';
+        circle.textContent = data.index ?? '';
+
+        if (data.image) {
+          const img = new Image();
+          const src = `${nodeImageBase}/${data.image}`;
+          img.alt = `${name} avatar`;
+          img.addEventListener('load', () => {
+            circle.classList.add('has-image');
+            circle.style.backgroundImage = `url('${src}')`;
+            circle.classList.remove('image-fallback');
+            circle.textContent = '';
+          });
+          img.addEventListener('error', () => {
+            circle.style.backgroundImage = '';
+            circle.classList.remove('has-image');
+            circle.classList.add('image-fallback');
+            circle.textContent = data.index ?? '';
+          });
+          img.src = src;
+        }
+
+        const label = document.createElement('div');
+        label.className = 'node-label';
+        label.textContent = name;
+
+        node.appendChild(circle);
+        node.appendChild(label);
+        node.addEventListener('click', () => openModal(name));
+        workflow.appendChild(node);
+      });
+    }
+
+    function openModal(agentName) {
+      modalTitle.textContent = agentName;
+      if (agentName === 'Policy') {
+        const policyText = policyTextarea.value.trim();
+        modalBody.innerHTML = formatOutput(policyText || 'No policy entered yet');
+      } else {
+        modalBody.innerHTML = formatOutput(agentData[agentName].output || 'No output available yet');
+      }
+      modal.classList.add('active');
+    }
+
+    function closeModal() { modal.classList.remove('active'); }
+
+    async function loadIndicators() {
+      try {
+        const data = await fetchJSON('/api/economic/status');
+        const macroGrid = document.getElementById('macro-grid');
+        macroGrid.innerHTML = '';
+        landingMacro.innerHTML = '';
+        const entries = [
+          ['GDP', data.indicators.gdp?.toFixed?.(2)],
+          ['Inflation (%)', data.indicators.inflation?.toFixed?.(2)],
+          ['Unemployment (%)', data.indicators.unemployment?.toFixed?.(2)],
+          ['Confidence', data.indicators.consumer_confidence?.toFixed?.(2)],
+          ['Days in Cycle', data.days_in_cycle]
+        ];
+        entries.forEach(([label, value]) => {
+          const div = document.createElement('div');
+          div.className = 'metric';
+          div.innerHTML = `<div class="label">${label}</div><div class="value">${value ?? '—'}</div>`;
+          macroGrid.appendChild(div.cloneNode(true));
+          landingMacro.appendChild(div);
+        });
+        document.getElementById('cycle-pill').textContent = `Cycle: ${data.current_cycle}`;
+      } catch (err) {
+        statusEl.textContent = err.message;
+      }
+    }
+
+    async function runAgents() {
+      const policyText = policyTextarea.value.trim();
+      if (!policyText) { statusEl.textContent = 'Please enter a policy description'; return; }
+      statusEl.textContent = 'Running analysis...';
+      showDebatePlaceholder();
+      document.querySelectorAll('.workflow-node:not(.policy)').forEach(n => { n.classList.remove('active'); n.classList.add('processing'); });
+
+      try {
+        const result = await fetchJSON('/api/agents/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: policyText })
+        });
+
+        document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('processing'));
+
+        (result.agents || []).forEach(agent => {
+          if (agentData[agent.agent]) {
+            agentData[agent.agent].output = agent.output || 'No output recorded';
+            const nodeEl = Array.from(document.querySelectorAll('.workflow-node')).find(n => n.querySelector('.node-label').textContent === agent.agent);
+            if (nodeEl) nodeEl.classList.add('active');
+          }
+        });
+
+        finalBox.innerHTML = formatOutput(result.final_output || 'No consolidated output available');
+        lastRun = result;
+        renderDecision(result);
+        renderAgentCards();
+        renderDebate(result.debate || sampleDebate);
+        statusEl.textContent = 'Analysis complete';
+      } catch (err) {
+        document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('processing'));
+        finalBox.innerHTML = formatOutput(err.message);
+        statusEl.textContent = 'Error: ' + err.message;
+        showDebatePlaceholder();
+      }
+    }
+
+    let lastRun = null;
+    function renderDecision(result) {
+      let box = document.getElementById('decision-box');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'decision-box';
+        box.style.cssText = 'margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;';
+        finalBox.insertAdjacentElement('afterend', box);
+      }
+      const approved = result.consensus && result.consensus.consensus_reached;
+      const applied = result.status === 'applied';
+      box.innerHTML = `<span class="pill">${escapeHTML(result.verdict?.decision || '')} · ${approved ? 'Approved' : 'Rejected'} · ${escapeHTML(result.mode || '')}</span>`;
+      if (approved && !applied) {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn active';
+        btn.textContent = 'Apply to live economy';
+        btn.onclick = async () => {
+          btn.disabled = true; btn.textContent = 'Applying...';
+          try {
+            const r = await fetchJSON(`/api/agents/${result.id}/apply`, { method: 'POST' });
+            box.innerHTML = `<span class="pill">${r.status === 'applied' ? 'Applied to the live economy' : 'Not applied: ' + escapeHTML(r.status)}</span>`;
+            loadIndicators();
+          } catch (err) { btn.textContent = err.message; }
+        };
+        box.appendChild(btn);
+      } else if (applied) {
+        box.insertAdjacentHTML('beforeend', '<span class="pill">Applied to the live economy</span>');
+      }
+    }
+
+    async function downloadReport() {
+      try {
+        const res = await fetch('/api/agents/report');
+        if (!res.ok) throw new Error('No report available. Run analysis first.');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'policy_report.txt';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        statusEl.textContent = err.message;
+      }
+    }
+
+    async function resetSession() {
+      await fetch('/reset_session', { method: 'POST' });
+      policyTextarea.value = '';
+      Object.keys(agentData).forEach(key => agentData[key].output = '');
+      document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('active', 'processing'));
+      finalBox.innerHTML = formatOutput('Analysis results will appear here after running the agents.');
+      renderAgentCards();
+      statusEl.textContent = 'Session reset';
+      loadIndicators();
+      showDebatePlaceholder();
+    }
+
+    function renderSignals(signals) {
+      signalBadges.innerHTML = '';
+      if (!signals || Object.keys(signals).length === 0) {
+        const badge = document.createElement('div');
+        badge.className = 'signal-pill';
+        badge.textContent = 'No signals detected';
+        signalBadges.appendChild(badge);
+        return;
+      }
+      Object.entries(signals).forEach(([key, value]) => {
+        const badge = document.createElement('div');
+        badge.className = 'signal-pill';
+        const label = key.replace(/_/g, ' ');
+        badge.textContent = `${label}: ${value}`;
+        signalBadges.appendChild(badge);
+      });
+    }
+
+    function renderPentagonNodes(actors) {
+      pentagon.innerHTML = '';
+      if (!actors || !actors.length) {
+        const msg = document.createElement('div');
+        msg.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--muted); font-size:14px;';
+        msg.textContent = 'No actors selected';
+        pentagon.appendChild(msg);
+        return;
+      }
+      const centerX = pentagon.clientWidth / 2;
+      const centerY = pentagon.clientHeight / 2;
+      const nodeWidth = 130;
+      const nodeHeight = 140;
+      const radius = Math.min(centerX, centerY) - 70;
+      actors.forEach((actor, idx) => {
+        const angle = (Math.PI * 2 * idx) / actors.length - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle) - nodeWidth / 2;
+        const y = centerY + radius * Math.sin(angle) - nodeHeight / 2;
+        const node = document.createElement('div');
+        node.className = `node ${idx === 0 ? 'primary' : ''}`;
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+
+        const circle = document.createElement('div');
+        circle.className = 'actor-node-circle';
+
+        const avatar = createActorAvatar(actor);
+        if (avatar) {
+          circle.appendChild(avatar);
+        } else {
+          circle.textContent = idx + 1;
+        }
+
+        const label = document.createElement('div');
+        label.className = 'actor-node-label';
+        label.textContent = actor;
+
+        node.appendChild(circle);
+        node.appendChild(label);
+        pentagon.appendChild(node);
+      });
+    }
+
+    function renderActorLabels(actors, actorSeries) {
+      actorLabels.innerHTML = '';
+      if (!actors || !actors.length) return;
+      actors.forEach((actor) => {
+        const card = document.createElement('div');
+        card.className = 'label-card';
+        const series = actorSeries?.[actor] || [];
+        const latest = series[series.length - 1];
+        const value = latest !== undefined && latest !== null ? latest.toFixed(2) : '—';
+        card.innerHTML = `<span>${actor}</span><span style="font-weight: 600;">${value}</span>`;
+        actorLabels.appendChild(card);
+      });
+    }
+
+    function renderTopActors(actors) {
+      topActorCards.innerHTML = '';
+      const list = actors && actors.length ? actors : defaultImpact;
+      list.forEach(({ name, score }) => {
+        const card = document.createElement('div');
+        card.className = 'actor-card';
+        const safeScore = (score ?? 0).toFixed ? score.toFixed(2) : Number(score || 0).toFixed(2);
+        const header = document.createElement('div');
+        header.className = 'actor-card-header';
+
+        const avatar = createActorAvatar(name);
+        if (avatar) header.appendChild(avatar);
+
+        const label = document.createElement('span');
+        label.className = 'name';
+        label.textContent = name;
+        header.appendChild(label);
+
+        const scoreEl = document.createElement('span');
+        scoreEl.className = 'score';
+        scoreEl.textContent = safeScore;
+
+        card.appendChild(header);
+        card.appendChild(scoreEl);
+        topActorCards.appendChild(card);
+      });
+    }
+
+    function buildGlobalChart(globalSeries) {
+      if (!globalSeries || !globalSeries.length) return;
+      const labels = globalSeries.map((_, idx) => `T${idx + 1}`);
+      const ctx = document.getElementById('global-chart').getContext('2d');
+      if (globalChart) globalChart.destroy();
+
+      globalChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'GDP', data: globalSeries.map((g) => g.gdp), borderColor: '#0066cc', backgroundColor: 'rgba(0, 102, 204, 0.1)', tension: 0.4, borderWidth: 2, pointRadius: 3, pointHoverRadius: 5 },
+            { label: 'Inflation', data: globalSeries.map((g) => g.inflation), borderColor: '#ff6b35', backgroundColor: 'rgba(255, 107, 53, 0.1)', tension: 0.4, borderWidth: 2, pointRadius: 3, pointHoverRadius: 5 },
+            { label: 'Unemployment', data: globalSeries.map((g) => g.unemployment), borderColor: '#d62828', backgroundColor: 'rgba(214, 40, 40, 0.1)', tension: 0.4, borderWidth: 2, pointRadius: 3, pointHoverRadius: 5 },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 2.5,
+          plugins: {
+            legend: { labels: { color: '#1a1a1a', font: { size: 12, weight: '600' }, padding: 15, usePointStyle: true, pointStyle: 'circle' } },
+            tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', padding: 12, titleFont: { size: 13, weight: '600' }, bodyFont: { size: 12 } }
+          },
+          scales: {
+            x: { ticks: { color: '#666666', font: { size: 11 } }, grid: { color: '#e5e5e5', drawBorder: false } },
+            y: { ticks: { color: '#666666', font: { size: 11 } }, grid: { color: '#e5e5e5', drawBorder: false }, beginAtZero: false },
+          },
+        },
+      });
+    }
+
+    function buildActorCharts(actorSeries) {
+      actorChartsWrap.innerHTML = '';
+      actorCharts = {};
+      if (!actorSeries || Object.keys(actorSeries).length === 0) return;
+
+      const labels = Object.values(actorSeries)[0]?.map((_, idx) => `T${idx + 1}`) || [];
+      const colors = ['#0066cc', '#00a896', '#ff6b35', '#d62828', '#8338ec'];
+
+      Object.entries(actorSeries).forEach(([actor, series], idx) => {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        const title = document.createElement('h3');
+        title.textContent = actor;
+        card.appendChild(title);
+
+        const canvas = document.createElement('canvas');
+        card.appendChild(canvas);
+        actorChartsWrap.appendChild(card);
+
+        const color = colors[idx % colors.length];
+        actorCharts[actor] = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: { labels, datasets: [{ label: actor, data: series, borderColor: color, backgroundColor: `${color}1a`, tension: 0.4, borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, fill: true }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.8,
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', padding: 10, titleFont: { size: 12 }, bodyFont: { size: 11 } } },
+            scales: {
+              x: { ticks: { color: '#666666', font: { size: 10 } }, grid: { color: '#e5e5e5', drawBorder: false } },
+              y: { ticks: { color: '#666666', font: { size: 10 } }, grid: { color: '#e5e5e5', drawBorder: false }, beginAtZero: false },
+            },
+          },
+        });
+      });
+    }
+
+    function renderLedgerStatus(snapshot) {
+      if (!ledgerStatus) return;
+      const { ledgerHeight, pendingCount, tipHash, valid, errors, mockRunning } = snapshot;
+      ledgerStatus.innerHTML = '';
+      const items = [
+        `Ledger height: ${ledgerHeight ?? '—'}`,
+        `Pending tx: ${pendingCount ?? '—'}`,
+        `Tip hash: ${tipHash ? tipHash.slice(0, 10) + '…' : '—'}`,
+        `Integrity: ${valid === undefined ? '—' : valid ? 'valid' : 'check errors'}`
+      ];
+      if (mockRunning !== undefined) {
+        items.unshift(mockRunning ? 'Mock stream: active' : 'Mock stream: idle');
+      }
+      items.forEach(text => {
+        const pill = document.createElement('span');
+        pill.className = 'status-pill';
+        pill.textContent = text;
+        ledgerStatus.appendChild(pill);
+      });
+      if (errors && errors.length) {
+        const errorPill = document.createElement('span');
+        errorPill.className = 'status-pill';
+        errorPill.style.borderColor = '#d62828';
+        errorPill.style.color = '#d62828';
+        errorPill.textContent = `${errors.length} integrity warning${errors.length > 1 ? 's' : ''}`;
+        ledgerStatus.appendChild(errorPill);
+      }
+    }
+
+    function clearDebateTimers() {
+      debateTimers.forEach(clearTimeout);
+      debateTimers = [];
+    }
+
+    function showDebatePlaceholder() {
+      if (!debateThread) return;
+      clearDebateTimers();
+      debateThread.innerHTML = '<div class="analysis-sub">Run analysis to view the debate.</div>';
+    }
+
+    function appendDebateRow({ stance, message }) {
+      const row = document.createElement('div');
+      const isSupporter = (stance || '').toLowerCase().includes('support');
+      row.className = `debate-exchange ${isSupporter ? 'supporter' : 'opposer'}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'debate-avatar';
+      avatar.style.background = isSupporter ? supporterColor : opposerColor;
+      avatar.textContent = isSupporter ? 'S' : 'O';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'debate-bubble';
+      bubble.textContent = message || 'No message available.';
+
+      row.appendChild(avatar);
+      row.appendChild(bubble);
+      debateThread.appendChild(row);
+      debateThread.scrollTop = debateThread.scrollHeight;
+    }
+
+    function renderDebate(exchanges) {
+      if (!debateThread) return;
+      clearDebateTimers();
+      debateThread.innerHTML = '';
+      const items = exchanges && exchanges.length ? exchanges : sampleDebate;
+      items.forEach((entry, idx) => {
+        const timer = setTimeout(() => appendDebateRow(entry), idx * debateDelay);
+        debateTimers.push(timer);
+      });
+    }
+
+    function renderLedgerBlocks(blocks) {
+      ledgerBlocks.innerHTML = '';
+      if (!blocks || !blocks.length) {
+        const msg = document.createElement('div');
+        msg.className = 'analysis-sub';
+        msg.textContent = 'No blocks mined yet.';
+        ledgerBlocks.appendChild(msg);
+        return;
+      }
+      blocks.slice().reverse().forEach(block => {
+        const card = document.createElement('div');
+        card.className = 'ledger-item';
+        const time = block.timestamp ? new Date(block.timestamp).toLocaleString() : '—';
+        const txCount = block.transactions?.length ?? 0;
+        card.innerHTML = `
+          <h3>Block #${block.index}</h3>
+          <div class="ledger-meta">
+            <span>Time: ${time}</span>
+            <span>Tx count: ${txCount}</span>
+            <span>Previous: ${block.previous_hash ? block.previous_hash.slice(0, 10) + '…' : '—'}</span>
+          </div>
+          <div style="margin-top: 8px;">
+            <div class="hash-pill">${block.hash || '—'}</div>
+            <div class="analysis-sub" style="margin-top: 6px;">Merkle root: ${block.merkle_root || '—'}</div>
+          </div>
+        `;
+        ledgerBlocks.appendChild(card);
+      });
+    }
+
+    function renderAuditLog(entries) {
+      auditLog.innerHTML = '';
+      if (!entries || !entries.length) {
+        const msg = document.createElement('div');
+        msg.className = 'analysis-sub';
+        msg.textContent = 'Waiting for audit events...';
+        auditLog.appendChild(msg);
+        return;
+      }
+      entries.slice().reverse().forEach(entry => {
+        const row = document.createElement('div');
+        row.className = 'audit-entry';
+        const ts = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '—';
+        const label = entry.action || 'event';
+        const blockIdx = entry.block_index ? `Block #${entry.block_index}` : 'Pending buffer';
+        const hash = entry.hash ? `<div class="hash-pill" style="margin-top:6px;">${entry.hash}</div>` : '';
+        const flow = entry.from && entry.to ? `${entry.from} → ${entry.to}` : '';
+        const amount = entry.amount ? `Amount: ${Number(entry.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+        const memo = entry.memo ? `<div class="analysis-sub">${escapeHTML(entry.memo)}</div>` : '';
+        row.innerHTML = `
+          <div><strong>${label}</strong> • ${blockIdx}</div>
+          <div class="analysis-sub">${ts} · ${amount || 'Tx count: ' + (entry.tx_count ?? '—')}</div>
+          ${flow ? `<div class="analysis-sub">${flow}</div>` : ''}
+          ${memo}
+          ${hash}
+        `;
+        auditLog.appendChild(row);
+      });
+    }
+
+    async function loadLedgerSnapshot() {
+      try {
+        const [ledgerRes, auditRes, pendingRes, verifyRes] = await Promise.all([
+          fetchJSON('/api/blockchain/ledger?limit=12'),
+          fetchJSON('/api/blockchain/audit?limit=25'),
+          fetchJSON('/api/blockchain/pending'),
+          fetchJSON('/api/blockchain/verify')
+        ]);
+
+        const ledgerList = ledgerRes.ledger || [];
+        const pendingCount = pendingRes.pending?.length ?? 0;
+        renderLedgerBlocks(ledgerList);
+        renderAuditLog(auditRes.audit || []);
+        renderLedgerStatus({
+          ledgerHeight: verifyRes.ledger_height ?? ledgerList.length,
+          pendingCount: verifyRes.pending_count ?? pendingCount,
+          tipHash: verifyRes.tip_hash ?? ledgerList[ledgerList.length - 1]?.hash,
+          valid: verifyRes.valid,
+          errors: verifyRes.errors,
+          mockRunning: verifyRes.mock_running
+        });
+      } catch (err) {
+        ledgerStatus.innerHTML = `<span class="status-pill">${escapeHTML(err.message)}</span>`;
+      }
+    }
+
+    function startLedgerStream() {
+      if (ledgerInterval) return;
+      loadLedgerSnapshot();
+      ledgerInterval = setInterval(loadLedgerSnapshot, 5000);
+    }
+
+    function stopLedgerStream() {
+      if (!ledgerInterval) return;
+      clearInterval(ledgerInterval);
+      ledgerInterval = null;
+    }
+
+    async function runSimulation() {
+      const policy = policyInput.value.trim();
+      const steps = Number(stepsInput.value) || 8;
+      if (!policy) { statusText.textContent = 'Please enter a policy first'; return; }
+      statusText.textContent = 'Running simulation...';
+      selectionPill.textContent = 'Running...';
+
+      try {
+        const result = await fetchJSON('/api/simulation/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ policy, time_steps: steps })
+        });
+        selectionPill.textContent = `${result.selected_actors?.length || 0} actors selected`;
+        renderSignals(result.policy_signals);
+        renderPentagonNodes(result.selected_actors);
+        const impactList = (result.selected_actors || []).map(name => {
+          const series = result.actor_series?.[name] || [];
+          const latest = series[series.length - 1];
+          const fallback = defaultImpact.find(a => a.name === name)?.score || 0;
+          return { name, score: latest ?? fallback };
+        });
+        renderTopActors(impactList);
+        renderActorLabels(result.selected_actors, result.actor_series);
+        buildGlobalChart(result.global_series);
+        buildActorCharts(result.actor_series);
+        statusText.textContent = 'Complete';
+      } catch (err) {
+        selectionPill.textContent = 'Simulation failed';
+        statusText.textContent = err.message;
+        renderSignals({});
+        renderPentagonNodes([]);
+        renderTopActors(defaultImpact);
+        actorChartsWrap.innerHTML = '';
+      }
+    }
+
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    document.getElementById('run-button').addEventListener('click', runAgents);
+    document.getElementById('report-button').addEventListener('click', downloadReport);
+    document.getElementById('reset-button').addEventListener('click', resetSession);
+    document.getElementById('run-btn').addEventListener('click', runSimulation);
+    document.getElementById('fill-btn').addEventListener('click', () => { policyInput.value = samplePolicy; statusText.textContent = 'Sample policy loaded'; });
+
+    renderSignals({});
+    renderPentagonNodes([]);
+    renderTopActors(defaultImpact);
+    showDebatePlaceholder();
+    loadIndicators();
+    drawConnections();
+    createNodes();
+    startFromQuery();
+    renderAgentCards();
+  </script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VALORA Agent Benchmark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#fafafa; --fg:#1a1a1a; --muted:#666; --border:#e5e5e5; --accent:#0066cc; --surface:#fff; --good:#1a7f37; --bad:#c62828; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Inter","Segoe UI",system-ui,sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:20px 32px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; background:var(--surface); position:sticky; top:0; z-index:5; }
+    h1 { margin:0; font-size:20px; font-weight:600; cursor:pointer; }
+    .subtext { font-size:13px; color:var(--muted); }
+    nav { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    nav a, .btn { border:none; background:transparent; color:var(--muted); padding:8px 14px; border-radius:6px; font-size:13px; font-weight:500; text-decoration:none; cursor:pointer; font-family:inherit; }
+    nav a:hover { background:var(--bg); color:var(--fg); }
+    nav a.active, .btn-primary { background:var(--fg); color:#fff; }
+    .btn-primary:disabled { opacity:.5; cursor:wait; }
+    .pill { padding:6px 12px; border-radius:6px; font-size:12px; background:var(--bg); color:var(--muted); font-weight:500; }
+    main { max-width:1180px; margin:0 auto; padding:28px 24px 64px; display:grid; gap:20px; }
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; overflow-x:auto; }
+    .panel h2 { margin:0 0 8px; font-size:15px; font-weight:600; }
+    p.lead { margin:0 0 14px; color:var(--muted); font-size:14px; line-height:1.5; }
+    .row { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+    label.check { font-size:13px; display:flex; gap:6px; align-items:center; }
+    table { border-collapse:collapse; width:100%; font-size:13px; }
+    th, td { text-align:right; padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+    th:first-child, td:first-child { text-align:left; }
+    th { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:600; }
+    td.best { font-weight:700; color:var(--good); }
+    .rank1 td:first-child { font-weight:700; }
+    .hash { font-family:ui-monospace,monospace; font-size:11px; color:var(--muted); }
+    .empty { color:var(--muted); font-size:13px; }
+    .scen { font-size:13px; margin:4px 0; }
+    @media (max-width:900px) { header { padding:16px; } main { padding:16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 onclick="location.href='/'">VALORA</h1>
+      <div class="subtext">agent benchmark</div>
+    </div>
+    <nav>
+      <a href="/studio?tab=analysis">Council</a>
+      <a href="/studio?tab=simulation">Simulation</a>
+      <a href="/studio?tab=ledger">Ledger</a>
+      <a href="/copilot">Copilot</a>
+      <a href="/bench" class="active">Benchmark</a>
+      <span class="pill">Model: {{ model }}</span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Which policy-making agent runs the economy best?</h2>
+      <p class="lead">Each agent runs the same seeded economy through every scenario for 36 months and sets policy every 6 months. The score rewards output and penalises missing 2% inflation, unemployment above 4.5% and wealth inequality. Same seed, same result: each run ends with a fingerprint hash.</p>
+      <div class="row" id="agent-boxes"></div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn btn-primary" id="run">Run benchmark</button>
+        <span class="subtext" id="status"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Results</h2>
+      <div id="results" class="empty">Run the benchmark to see scores per scenario. It takes about a minute with the offline agents.</div>
+    </section>
+
+    <section class="panel">
+      <h2>Scenarios</h2>
+      <div id="scenarios" class="empty">Loading...</div>
+    </section>
+
+    <section class="panel">
+      <h2>All-time leaderboard</h2>
+      <div id="leaderboard" class="empty">No runs recorded yet.</div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    let poll;
+
+    async function api(url, opts = {}) {
+      const r = await fetch(url, opts);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || `Request failed: ${r.status}`);
+      return data;
+    }
+
+    async function init() {
+      const meta = await api('/api/meta');
+      $('scenarios').classList.remove('empty');
+      $('scenarios').innerHTML = Object.entries(meta.scenarios).map(([k, v]) => `<div class="scen"><strong>${esc(k)}</strong>: ${esc(v)}</div>`).join('');
+      const defaults = ['no-policy', 'fixed-stimulus', 'taylor-rule', 'copilot-offline'];
+      $('agent-boxes').innerHTML = meta.bench_agents.map(a => {
+        const disabled = a === 'copilot-llm' && !meta.llm_enabled;
+        return `<label class="check"><input type="checkbox" value="${esc(a)}" ${defaults.includes(a) ? 'checked' : ''} ${disabled ? 'disabled' : ''}> ${esc(a)}${disabled ? ' (needs API key)' : ''}</label>`;
+      }).join('');
+      loadLeaderboard();
+      const st = await api('/api/bench/status');
+      if (st.state === 'running') startPolling();
+      else if (st.state === 'done') renderResults(st.result);
+    }
+
+    function renderResults(res) {
+      if (!res) return;
+      const scen = Object.keys(res.scenarios);
+      const best = {};
+      scen.forEach(s => { best[s] = Math.max(...res.ranking.map(r => r.scores[s] ?? -Infinity)); });
+      const hashes = {};
+      res.results.forEach(r => { hashes[`${r.agent}|${r.scenario}`] = r.run_hash; });
+      let html = `<table><thead><tr><th>Agent</th><th>Mean score</th>${scen.map(s => `<th>${esc(s)}</th>`).join('')}</tr></thead><tbody>`;
+      res.ranking.forEach((r, i) => {
+        html += `<tr class="${i === 0 ? 'rank1' : ''}"><td>${i + 1}. ${esc(r.agent)}</td><td>${r.mean_score.toFixed(2)}</td>` +
+          scen.map(s => `<td class="${r.scores[s] === best[s] ? 'best' : ''}" title="run hash ${esc(hashes[r.agent + '|' + s] || '')}">${(r.scores[s] ?? 0).toFixed(2)}</td>`).join('') + '</tr>';
+      });
+      html += '</tbody></table>';
+      html += `<p class="subtext" style="margin-top:10px;">Hover a score to see that run's fingerprint hash. Best score per scenario is in green.</p>`;
+      $('results').classList.remove('empty');
+      $('results').innerHTML = html;
+    }
+
+    async function loadLeaderboard() {
+      const data = await api('/api/bench/leaderboard');
+      if (!data.leaderboard.length) return;
+      $('leaderboard').classList.remove('empty');
+      $('leaderboard').innerHTML = '<table><thead><tr><th>Scenario</th><th>Agent</th><th>Best score</th><th>Runs</th></tr></thead><tbody>' +
+        data.leaderboard.map(r => `<tr><td>${esc(r.scenario)}</td><td style="text-align:left">${esc(r.agent)}</td><td>${r.best_score.toFixed(2)}</td><td>${r.runs}</td></tr>`).join('') + '</tbody></table>';
+    }
+
+    function startPolling() {
+      $('run').disabled = true;
+      clearInterval(poll);
+      poll = setInterval(async () => {
+        const st = await api('/api/bench/status');
+        if (st.state === 'running') {
+          $('status').textContent = `Running: ${st.progress[st.progress.length - 1] || 'starting'} (${st.progress.length} runs started)`;
+        } else {
+          clearInterval(poll);
+          $('run').disabled = false;
+          $('status').textContent = st.state === 'done' ? 'Done.' : `Failed: ${st.error || ''}`;
+          renderResults(st.result);
+          loadLeaderboard();
+        }
+      }, 1500);
+    }
+
+    $('run').onclick = async () => {
+      const agents = [...document.querySelectorAll('#agent-boxes input:checked')].map(i => i.value);
+      try {
+        await api('/api/bench/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ agents }) });
+        startPolling();
+      } catch (e) { $('status').textContent = e.message; }
+    };
+
+    init().catch(e => { $('status').textContent = e.message; });
+  </script>
+</body>
+</html>

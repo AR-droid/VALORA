@@ -1,0 +1,6 @@
+name: demand_collapse
+description: Household confidence and demand fall sharply in month 6 for a year.
+seed: 12
+ticks: 36
+shocks:
+  - {tick: 6, type: demand_collapse, magnitude: 1.2, duration: 12}

@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check valora tests wsgi.py
+      - run: pytest -q
+        env:
+          VALORA_OFFLINE: "1"
+      - name: Smoke-test the benchmark CLI
+        run: python -m valora bench --agents no-policy taylor-rule --scenarios baseline energy_shock
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t valora .
+      - name: Boot the container and hit the health check
+        run: |
+          docker run -d -p 7860:7860 --name valora valora
+          for i in $(seq 1 30); do curl -sf localhost:7860/healthz && exit 0; sleep 2; done
+          docker logs valora; exit 1

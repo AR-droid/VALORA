@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Policy Simulation Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="{{ url_for('static', filename='vendor/chart-4.4.1.umd.js') }}"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #0c0c0c;
+      --muted: #3a3a3a;
+      --border: #111111;
+      --accent: #0066cc;
+      --accent-light: #e6f2ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 18px 24px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: 22px; letter-spacing: 0.3px; }
+    .pill { 
+      border: 1px solid var(--border); 
+      padding: 8px 12px; 
+      border-radius: 999px; 
+      font-size: 13px; 
+      background: #f5f5f5;
+    }
+    main { 
+      flex: 1; 
+      display: grid; 
+      grid-template-columns: 1.05fr 1fr; 
+      gap: 18px; 
+      padding: 18px 24px 24px; 
+    }
+    .panel { 
+      border: 1px solid var(--border); 
+      border-radius: 14px; 
+      padding: 16px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      background: #fff; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .panel h2 { 
+      margin: 0; 
+      font-size: 16px; 
+      letter-spacing: 0.2px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+    }
+    textarea { 
+      width: 100%; 
+      min-height: 160px; 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 12px; 
+      font-size: 14px; 
+      background: #f8f8f8; 
+      color: var(--fg); 
+      resize: vertical; 
+      font-family: inherit;
+    }
+    button {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--fg);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--fg);
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .subtext { 
+      font-size: 13px; 
+      color: var(--muted); 
+    }
+    .signal-badges { 
+      display: flex; 
+      gap: 10px; 
+      flex-wrap: wrap; 
+    }
+    .signal-pill {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: #f5f5f5;
+    }
+    .pentagon-area {
+      position: relative;
+      height: 280px;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .node {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8px;
+      color: var(--fg);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .node.primary {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      width: 88px;
+      height: 88px;
+    }
+    .node-labels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .label-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fafafa;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .chart-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      background: #fafafa;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .chart-card canvas {
+      max-height: 260px;
+      width: 100% !important;
+      display: block;
+    }
+    .chart-card h3 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .chart-toggles {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 6px 0 10px;
+    }
+    .microcopy {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .shock-inline {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 260px;
+    }
+    .shock-card {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fcfcfc;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .shock-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .shock-badge {
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      background: #fff;
+      font-weight: 600;
+    }
+    .toggle-btn {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .toggle-btn.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 1px 6px rgba(0, 102, 204, 0.15);
+    }
+    input[type="number"] {
+      width: 70px;
+      background: #f8f8f8;
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-family: inherit;
+    }
+    @media (max-width: 1080px) {
+      main { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Policy Simulation Engine</h1>
+      <div class="subtext">Run dynamic economy simulations from your browser</div>
+    </div>
+    <div class="pill" id="selection-pill">Awaiting policy input</div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Policy & Run Controls <span class="subtext" id="status-text">Idle</span></h2>
+      <textarea id="policy-text" placeholder="Describe your policy. Example: Expand child benefits, lower policy rates by 50 bps, and raise renewable mandates for utilities."></textarea>
+      <div class="actions" style="align-items: flex-start;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <button id="run-btn">Run Simulation</button>
+          <button class="secondary" id="fill-btn">Use sample policy</button>
+          <span class="subtext">Time steps: <input type="number" id="steps" value="14" min="3" max="24" /></span>
+        </div>
+        <div class="shock-inline">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="subtext">Shock scenario (mock)</div>
+            <div class="shock-badge" id="shock-status">Awaiting simulation</div>
+          </div>
+          <div class="shock-controls">
+            <button id="shock-btn" disabled>Apply Shock</button>
+            <button class="secondary" id="before-shock-btn" disabled>Before Shock</button>
+            <button class="secondary" id="after-shock-btn" disabled>After Shock</button>
+          </div>
+        </div>
+      </div>
+      <div class="shock-card">
+        <div class="microcopy">Write a fictional shock (crisis, disaster, etc.). After the simulation, applying it flips the charts to show a negative impact.</div>
+        <textarea id="shock-text" placeholder="Ex: Global energy crisis triggers credit crunch and demand shock." disabled></textarea>
+      </div>
+      <div class="shock-card">
+        <div class="actions" style="justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div class="subtext">Shock scenario (mock)</div>
+            <div class="microcopy">Applies a fictional negative impact after the simulation completes.</div>
+          </div>
+          <div class="shock-badge" id="shock-status">Awaiting simulation</div>
+        </div>
+        <textarea id="shock-text" placeholder="Ex: Global energy crisis triggers credit crunch and demand shock." disabled></textarea>
+        <div class="shock-controls">
+          <button id="shock-btn" disabled>Apply Shock</button>
+          <button class="secondary" id="before-shock-btn" disabled>Before Shock</button>
+          <button class="secondary" id="after-shock-btn" disabled>After Shock</button>
+        </div>
+      </div>
+      <div>
+        <div class="subtext">Policy signals detected</div>
+        <div class="signal-badges" id="signal-badges"></div>
+      </div>
+      <div>
+        <div class="subtext">Top 5 affected actors</div>
+        <div class="pentagon-area" id="pentagon"></div>
+        <div class="node-labels" id="actor-labels"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Charts & Dashboards</h2>
+      <div class="chart-card">
+        <h3>Global Economic Indicators</h3>
+        <div class="chart-toggles" id="global-modes">
+          <button class="toggle-btn active" data-mode="macro">Growth & Prices</button>
+          <button class="toggle-btn" data-mode="policy">Policy & Credit</button>
+          <button class="toggle-btn" data-mode="labor">Labor & Sentiment</button>
+        </div>
+        <canvas id="global-chart"></canvas>
+      </div>
+      <div class="charts-grid" id="actor-charts"></div>
+    </section>
+  </main>
+
+  <script>
+    const policyInput = document.getElementById('policy-text');
+    const signalBadges = document.getElementById('signal-badges');
+    const pentagon = document.getElementById('pentagon');
+    const actorLabels = document.getElementById('actor-labels');
+    const selectionPill = document.getElementById('selection-pill');
+    const statusText = document.getElementById('status-text');
+    const stepsInput = document.getElementById('steps');
+    const actorChartsWrap = document.getElementById('actor-charts');
+    const globalModeButtons = document.querySelectorAll('#global-modes .toggle-btn');
+    const shockInput = document.getElementById('shock-text');
+    const shockBtn = document.getElementById('shock-btn');
+    const beforeShockBtn = document.getElementById('before-shock-btn');
+    const afterShockBtn = document.getElementById('after-shock-btn');
+    const shockStatus = document.getElementById('shock-status');
+
+    let globalChart;
+    let actorCharts = {};
+    let globalSeriesCache = [];
+    let baselineGlobalSeries = [];
+    let baselineActorSeries = {};
+    let shockedGlobalSeries = [];
+    let shockedActorSeries = {};
+    let selectedActors = [];
+    let currentActorSeries = {};
+    let shockApplied = false;
+    let globalMode = 'macro';
+
+    const samplePolicy = "Increase transfer payments, ease small-business credit, and tighten emissions standards for utilities.";
+
+    function renderSignals(signals) {
+      signalBadges.innerHTML = '';
+      if (!signals || Object.keys(signals).length === 0) {
+        const badge = document.createElement('div');
+        badge.className = 'signal-pill';
+        badge.textContent = 'No signals detected';
+        signalBadges.appendChild(badge);
+        return;
+      }
+      Object.entries(signals).forEach(([key, value]) => {
+        const badge = document.createElement('div');
+        badge.className = 'signal-pill';
+        badge.textContent = `${key}: ${value}`;
+        signalBadges.appendChild(badge);
+      });
+    }
+
+    function renderPentagonNodes(actors) {
+      pentagon.innerHTML = '';
+      if (!actors || !actors.length) {
+        const msg = document.createElement('div');
+        msg.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--muted); font-size:14px;';
+        msg.textContent = 'No actors selected';
+        pentagon.appendChild(msg);
+        return;
+      }
+      const centerX = pentagon.clientWidth / 2;
+      const centerY = pentagon.clientHeight / 2;
+      const radius = Math.min(centerX, centerY) - 50;
+      actors.forEach((actor, idx) => {
+        const angle = (Math.PI * 2 * idx) / actors.length - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle) - 40;
+        const y = centerY + radius * Math.sin(angle) - 40;
+        const node = document.createElement('div');
+        node.className = `node ${idx === 0 ? 'primary' : ''}`;
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+        node.textContent = actor;
+        pentagon.appendChild(node);
+      });
+    }
+
+    function renderActorLabels(actors, actorSeries) {
+      actorLabels.innerHTML = '';
+      if (!actors || !actors.length) return;
+      actors.forEach((actor) => {
+        const card = document.createElement('div');
+        card.className = 'label-card';
+        const series = actorSeries?.[actor] || [];
+        const latest = series[series.length - 1];
+        const value = latest !== undefined && latest !== null ? latest.toFixed(2) : '—';
+        card.innerHTML = `<span>${actor}</span><span style="font-weight: 700;">${value}</span>`;
+        actorLabels.appendChild(card);
+      });
+    }
+
+    function buildGlobalChart(globalSeries) {
+      if (!globalSeries || !globalSeries.length) return;
+      globalSeriesCache = globalSeries;
+      const labels = globalSeries.map((_, idx) => `T${idx + 1}`);
+      const globalCanvas = document.getElementById('global-chart');
+      globalCanvas.height = 260;
+      const ctx = globalCanvas.getContext('2d');
+      if (globalChart) globalChart.destroy();
+
+      const datasetThemes = {
+        macro: [
+          { key: 'gdp', label: 'GDP', color: '#0066cc' },
+          { key: 'inflation', label: 'Inflation', color: '#ff6b35' },
+          { key: 'unemployment', label: 'Unemployment', color: '#d62828' },
+          { key: 'consumption', label: 'Consumption', color: '#00a896' }
+        ],
+        policy: [
+          { key: 'policy_rate', label: 'Policy Rate', color: '#6c2bd9' },
+          { key: 'credit_growth', label: 'Credit Growth', color: '#118ab2' },
+          { key: 'credit_spread', label: 'Credit Spread', color: '#ef476f' },
+          { key: 'trade_balance', label: 'Trade Balance', color: '#073b4c' }
+        ],
+        labor: [
+          { key: 'employment', label: 'Employment', color: '#2a9d8f' },
+          { key: 'wage_growth', label: 'Wage Growth', color: '#f4a261' },
+          { key: 'consumer_sentiment', label: 'Consumer Sentiment', color: '#3a86ff' },
+          { key: 'productivity', label: 'Productivity', color: '#8338ec' }
+        ]
+      };
+
+      const datasets = (datasetThemes[globalMode] || datasetThemes.macro).map(({ key, label, color }) => ({
+        label,
+        data: globalSeries.map((g) => g[key]),
+        borderColor: color,
+        backgroundColor: `${color}1a`,
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        fill: true
+      }));
+
+      globalChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets,
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 2.1,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#0c0c0c',
+                font: { size: 12, weight: '600' },
+              },
+              padding: 15,
+              usePointStyle: true,
+              pointStyle: 'circle'
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: 12,
+              titleFont: { size: 13, weight: '600' },
+              bodyFont: { size: 12 },
+              callbacks: {
+                label: (context) => `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#3a3a3a', font: { size: 11 } },
+              grid: { color: 'rgba(0,0,0,0.04)', borderDash: [3, 4], drawBorder: false }
+            },
+            y: {
+              ticks: {
+                color: '#3a3a3a',
+                font: { size: 11 },
+                callback: (value) => Number(value).toFixed(1),
+              },
+              grid: { color: 'rgba(0,0,0,0.04)', borderDash: [3, 4], drawBorder: false },
+              beginAtZero: false
+            },
+          },
+        },
+      });
+    }
+
+    function buildActorCharts(actorSeries) {
+      actorChartsWrap.innerHTML = '';
+      actorCharts = {};
+      if (!actorSeries || Object.keys(actorSeries).length === 0) return;
+
+      const labels = Object.values(actorSeries)[0]?.map((_, idx) => `T${idx + 1}`) || [];
+      const colors = ['#0066cc', '#00a896', '#ff6b35', '#d62828', '#8338ec'];
+      
+      Object.entries(actorSeries).forEach(([actor, series], idx) => {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        const title = document.createElement('h3');
+        title.textContent = actor;
+        card.appendChild(title);
+        
+        const canvas = document.createElement('canvas');
+        card.appendChild(canvas);
+        actorChartsWrap.appendChild(card);
+        
+        const color = colors[idx % colors.length];
+        actorCharts[actor] = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{ 
+              label: actor, 
+              data: series, 
+              borderColor: color, 
+              backgroundColor: `${color}1a`, 
+              tension: 0.4,
+              borderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              fill: true
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.8,
+            plugins: { 
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 10,
+                titleFont: { size: 12 },
+                bodyFont: { size: 11 }
+              }
+            },
+            scales: {
+              x: { 
+                ticks: { color: '#3a3a3a', font: { size: 10 } }, 
+                grid: { color: '#e5e5e5', drawBorder: false } 
+              },
+              y: { 
+                ticks: { color: '#3a3a3a', font: { size: 10 } }, 
+                grid: { color: '#e5e5e5', drawBorder: false },
+                beginAtZero: false
+              },
+            },
+          },
+        });
+      });
+    }
+
+    async function runSimulation() {
+      const policy = policyInput.value.trim();
+      const steps = Number(stepsInput.value) || 14;
+      if (!policy) {
+        statusText.textContent = 'Please enter a policy first';
+        return;
+      }
+      statusText.textContent = 'Running simulation...';
+      
+      // Simulate API call with mock data
+      setTimeout(() => {
+        const mockData = generateMockData(steps);
+        selectionPill.textContent = `${mockData.selected_actors.length} actors selected`;
+        renderSignals(mockData.policy_signals);
+        renderPentagonNodes(mockData.selected_actors);
+        renderActorLabels(mockData.selected_actors, mockData.actor_series);
+        baselineGlobalSeries = deepCloneSeries(mockData.global_series);
+        baselineActorSeries = deepCloneSeries(mockData.actor_series);
+        shockedGlobalSeries = [];
+        shockedActorSeries = {};
+        selectedActors = [...mockData.selected_actors];
+        shockApplied = false;
+        updateShockControls('ready');
+        showView('before');
+        statusText.textContent = 'Complete';
+      }, 1500);
+    }
+
+    function deepCloneSeries(series) {
+      if (Array.isArray(series)) {
+        return series.map((item) => deepCloneSeries(item));
+      }
+      if (series && typeof series === 'object') {
+        return Object.fromEntries(Object.entries(series).map(([k, v]) => [k, deepCloneSeries(v)]));
+      }
+      return series;
+    }
+
+    function applyShock() {
+      if (!baselineGlobalSeries.length) return;
+      const narrative = shockInput.value.trim() || 'Generic macro shock.';
+      const severity = 0.85 + Math.random() * 0.08;
+
+      shockedGlobalSeries = baselineGlobalSeries.map((point, idx) => {
+        const decay = 1 - (idx / Math.max(baselineGlobalSeries.length, 1)) * 0.1;
+        const adjusted = {};
+        Object.entries(point).forEach(([key, value]) => {
+          const wobble = (Math.random() - 0.5) * 1.5;
+          adjusted[key] = value * severity * decay + wobble - 1.5;
+        });
+        return adjusted;
+      });
+
+      shockedActorSeries = {};
+      Object.entries(baselineActorSeries).forEach(([actor, series]) => {
+        const drop = 0.9 + Math.random() * 0.05;
+        shockedActorSeries[actor] = series.map((value, idx) => {
+          const drag = 1 - (idx / Math.max(series.length, 1)) * 0.12;
+          return value * drop * drag - Math.random() * 2.2;
+        });
+      });
+
+      shockApplied = true;
+      shockStatus.textContent = `Mock shock applied: ${narrative}`;
+      showView('after');
+    }
+
+    function showView(mode) {
+      const useShocked = mode === 'after' && shockApplied;
+      const globalSeries = useShocked ? shockedGlobalSeries : baselineGlobalSeries;
+      const actorSeries = useShocked ? shockedActorSeries : baselineActorSeries;
+      globalSeriesCache = globalSeries;
+      currentActorSeries = actorSeries;
+      buildGlobalChart(globalSeries);
+      buildActorCharts(actorSeries);
+      renderActorLabels(selectedActors, actorSeries);
+      selectionPill.textContent = useShocked ? 'Shock impact view' : `${selectedActors.length || 0} actors selected`;
+      statusText.textContent = useShocked ? 'Showing shock impact (mock)' : 'Simulation complete';
+      updateShockControls(useShocked ? 'after' : 'before');
+    }
+
+    function updateShockControls(state) {
+      if (state === 'ready') {
+        shockInput.disabled = false;
+        shockBtn.disabled = false;
+        beforeShockBtn.disabled = false;
+        afterShockBtn.disabled = true;
+        shockStatus.textContent = 'Ready for shock prompt';
+      } else if (state === 'after') {
+        beforeShockBtn.disabled = false;
+        afterShockBtn.disabled = false;
+        shockBtn.disabled = false;
+      } else {
+        beforeShockBtn.disabled = false;
+        afterShockBtn.disabled = !shockApplied;
+      }
+    }
+
+    function generateMockData(steps) {
+      const actors = ['Households', 'Firms', 'Banks', 'Government', 'Central Bank'];
+      const signals = { fiscal: '+2', monetary: '-1', regulatory: '+1' };
+
+      const globalSeries = [];
+      let gdp = 100, inflation = 2.3, unemployment = 5.1, consumption = 70;
+      let policy_rate = 4.5, credit_growth = 3.5, credit_spread = 1.1, trade_balance = -1.5;
+      let employment = 94.5, wage_growth = 2.6, consumer_sentiment = 55, productivity = 101;
+      for (let i = 0; i < steps; i++) {
+        gdp += (Math.random() - 0.45) * 3.3;
+        inflation += (Math.random() - 0.5) * 0.4;
+        unemployment += (Math.random() - 0.55) * 0.35;
+        consumption += (Math.random() - 0.45) * 2.4;
+
+        policy_rate += (Math.random() - 0.55) * 0.25;
+        credit_growth += (Math.random() - 0.4) * 0.6;
+        credit_spread += (Math.random() - 0.4) * 0.18;
+        trade_balance += (Math.random() - 0.5) * 0.5;
+
+        employment += (Math.random() - 0.45) * 0.4;
+        wage_growth += (Math.random() - 0.5) * 0.25;
+        consumer_sentiment += (Math.random() - 0.45) * 1.8;
+        productivity += (Math.random() - 0.45) * 0.7;
+
+        globalSeries.push({
+          gdp,
+          inflation,
+          unemployment,
+          consumption,
+          policy_rate,
+          credit_growth,
+          credit_spread,
+          trade_balance,
+          employment,
+          wage_growth,
+          consumer_sentiment,
+          productivity
+        });
+      }
+      
+      const actorSeries = {};
+      actors.forEach(actor => {
+        actorSeries[actor] = [];
+        let val = 50 + Math.random() * 20;
+        for (let i = 0; i < steps; i++) {
+          val += (Math.random() - 0.5) * 5;
+          actorSeries[actor].push(val);
+        }
+      });
+      
+      return {
+        selected_actors: actors,
+        policy_signals: signals,
+        global_series: globalSeries,
+        actor_series: actorSeries
+      };
+    }
+
+    document.getElementById('run-btn').addEventListener('click', runSimulation);
+    document.getElementById('fill-btn').addEventListener('click', () => {
+      policyInput.value = samplePolicy;
+      statusText.textContent = 'Sample policy loaded';
+    });
+
+    shockBtn.addEventListener('click', applyShock);
+    beforeShockBtn.addEventListener('click', () => showView('before'));
+    afterShockBtn.addEventListener('click', () => showView('after'));
+
+    globalModeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        globalMode = btn.dataset.mode;
+        globalModeButtons.forEach((b) => b.classList.toggle('active', b === btn));
+        if (globalSeriesCache.length) {
+          buildGlobalChart(globalSeriesCache);
+        }
+      });
+    });
+
+    // Initialize empty state
+    renderSignals({});
+    renderPentagonNodes([]);
+  </script>
+</body>
+</html>

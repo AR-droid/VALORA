@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VALORA - Economic Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --fg: #1a1a1a;
+      --muted: #666666;
+      --border: #e5e5e5;
+      --accent: #0066cc;
+      --accent-soft: #e8f3ff;
+      --surface: #ffffff;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+      background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+    }
+    .hero h1 {
+      font-size: 72px;
+      font-weight: 600;
+      letter-spacing: -2px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #666666 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .tagline {
+      font-size: 20px;
+      color: var(--muted);
+      margin-bottom: 48px;
+      font-weight: 400;
+    }
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 64px;
+    }
+    .btn {
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--fg);
+      color: var(--surface);
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: var(--bg);
+    }
+    .features {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+    .features h2 {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 48px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      transition: all 0.2s;
+    }
+    .feature-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+    }
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: -0.2px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .tech-stack {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 64px 24px;
+      text-align: center;
+    }
+    .tech-stack h3 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      letter-spacing: -0.3px;
+    }
+    .tech-badges {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .badge {
+      padding: 8px 16px;
+      background: var(--bg);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 48px; }
+      .hero .tagline { font-size: 16px; }
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <h1>VALORA</h1>
+    <p class="tagline">An AI-Powered Economic Simulation Sandbox</p>
+    
+    <div class="cta-group">
+        <a href="/studio" class="btn btn-primary">Launch Policy Analysis</a>
+        <a href="/copilot" class="btn btn-secondary">Ask the Policy Copilot</a>
+        <a href="/studio?tab=simulation" class="btn btn-secondary">Run Simulation</a>
+        <a href="/bench" class="btn btn-secondary">Agent Benchmark</a>
+    </div>
+
+    <div class="features">
+      <h2>What is VALORA?</h2>
+      <p style="text-align: center; max-width: 800px; margin: 0 auto 48px; color: var(--muted); font-size: 16px;">
+        VALORA is an experimental economic sandbox where AI agents—consumers, firms, banks, and regulators—interact autonomously within a simulated economy. Watch cycles unfold, test policy interventions, and analyze outcomes through intelligent agent workflows.
+      </p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Dynamic Economic Cycles</h3>
+          <p>Simulate realistic business cycles from expansion through peak, recession, and trough. Track GDP growth, inflation rates, unemployment levels, and consumer confidence in real-time.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Intelligent AI Agents</h3>
+          <p>Autonomous agents make decisions using reinforcement learning and heuristics. Consumers optimize spending, firms adjust pricing, banks evaluate loans, and regulators balance fiscal policy.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Economic Council</h3>
+          <p>Five AI agents deliberate on every proposal using simulated evidence: an analyst and tax advisor assess it, a supporter and opposer debate, a critic rules, and a weighted vote decides whether it reaches the live economy.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Policy Copilot</h3>
+          <p>Give a goal in plain English. A tool-using agent inspects the economy, recalls past decisions, simulates and stress-tests candidate policies, and proposes the best one with checked numbers.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Agent Benchmark</h3>
+          <p>Seeded crisis scenarios score policy-making agents (rules, the Copilot, LLMs) on growth, jobs, inflation and inequality, with a fingerprint hash per run so results are reproducible.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Shock Scenarios</h3>
+          <p>Test economic resilience by introducing real-world shocks—financial crises, pandemics, supply disruptions—and observe how agents adapt their strategies and the economy recovers.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Blockchain Logging</h3>
+          <p>Transparent transaction ledger using blockchain-style hashing. Every economic action is recorded, hashed, and chained for full auditability and replay capabilities.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Interactive Simulation</h3>
+          <p>Visualize actor behaviors through dynamic charts and network graphs. Adjust policy parameters, run time-stepped simulations, and compare alternative economic trajectories.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tech-stack">
+    <h3>Built With Modern Technologies</h3>
+    <div class="tech-badges">
+      <span class="badge">Flask API</span>
+      <span class="badge">Tool-using LLM Agents</span>
+      <span class="badge">Multi-agent Council</span>
+      <span class="badge">Benchmark Harness</span>
+      <span class="badge">Reinforcement Learning</span>
+      <span class="badge">Q-Learning</span>
+      <span class="badge">Random Forest</span>
+      <span class="badge">PPO</span>
+      <span class="badge">LLM Integration</span>
+      <span class="badge">Chart.js</span>
+      <span class="badge">Blockchain Hashing</span>
+      <span class="badge">REST API</span>
+    </div>
+  </section>
+</body>
+</html>

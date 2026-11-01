@@ -1,0 +1,5 @@
+name: baseline
+description: A normal business cycle with no shocks. Can a policy-maker beat doing nothing?
+seed: 11
+ticks: 36
+shocks: []

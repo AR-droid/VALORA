@@ -1,0 +1,7 @@
+name: overheating
+description: A tech boom overheats the economy from month 3; can inflation be kept near 2%?
+seed: 16
+ticks: 36
+shocks:
+  - {tick: 3, type: tech_boom, magnitude: 1.5, duration: 18}
+  - {tick: 10, type: supply_cost, magnitude: 1.0, duration: 8}

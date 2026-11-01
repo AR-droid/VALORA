@@ -1,0 +1,25 @@
+name: Deploy to Hugging Face Spaces
+
+# Needs two settings in the GitHub repo:
+#   secret   HF_TOKEN  - a Hugging Face access token with write permission
+#   variable HF_SPACE  - the Space id, e.g. your-hf-username/valora
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ vars.HF_SPACE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install "huggingface_hub>=0.24"
+      - name: Upload to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: python deploy/hf_space.py

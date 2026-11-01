@@ -1,0 +1,6 @@
+name: pandemic
+description: A pandemic cuts productivity and demand from month 5 for 8 months.
+seed: 15
+ticks: 36
+shocks:
+  - {tick: 5, type: pandemic, magnitude: 1.0, duration: 8}
